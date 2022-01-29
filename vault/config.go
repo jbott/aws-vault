@@ -144,6 +144,7 @@ type ProfileSection struct {
 	SSORoleName             string `ini:"sso_role_name,omitempty"`
 	WebIdentityTokenFile    string `ini:"web_identity_token_file,omitempty"`
 	WebIdentityTokenProcess string `ini:"web_identity_token_process,omitempty"`
+	STSEndpoint             string `ini:"sts_endpoint,omitempty"`
 	STSRegionalEndpoints    string `ini:"sts_regional_endpoints,omitempty"`
 	SessionTags             string `ini:"session_tags,omitempty"`
 	TransitiveSessionTags   string `ini:"transitive_session_tags,omitempty"`
@@ -326,6 +327,9 @@ func (cl *ConfigLoader) populateFromConfigFile(config *Config, profileName strin
 	if config.WebIdentityTokenProcess == "" {
 		config.WebIdentityTokenProcess = psection.WebIdentityTokenProcess
 	}
+	if config.STSEndpoint == "" {
+		config.STSEndpoint = psection.STSEndpoint
+	}
 	if config.STSRegionalEndpoints == "" {
 		config.STSRegionalEndpoints = psection.STSRegionalEndpoints
 	}
@@ -380,6 +384,11 @@ func (cl *ConfigLoader) populateFromEnv(profile *Config) {
 	if region := os.Getenv("AWS_DEFAULT_REGION"); region != "" && profile.Region == "" {
 		log.Printf("Using region %q from AWS_DEFAULT_REGION", region)
 		profile.Region = region
+	}
+
+	if stsEndpoint := os.Getenv("AWS_STS_ENDPOINT"); stsEndpoint != "" && profile.STSEndpoint == "" {
+		log.Printf("Using %q from AWS_STS_ENDPOINT", stsEndpoint)
+		profile.STSEndpoint = stsEndpoint
 	}
 
 	if stsRegionalEndpoints := os.Getenv("AWS_STS_REGIONAL_ENDPOINTS"); stsRegionalEndpoints != "" && profile.STSRegionalEndpoints == "" {
@@ -503,6 +512,9 @@ type Config struct {
 
 	// Region is the AWS region
 	Region string
+
+	// STSEndpoint sets the STS endpoint URL directly, bypassing the STS endpoint resolution logic
+	STSEndpoint string
 
 	// STSRegionalEndpoints sets STS endpoint resolution logic, must be "regional" or "legacy"
 	STSRegionalEndpoints string
